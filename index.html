@@ -1,205 +1,1117 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>條碼比對系統</title>
     <meta name="description" content="使用手機掃描 Code39 條碼，比對是否在指定清單中">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
     <style>
-:root {
-    --primary: #6366f1;
-    --primary-dark: #4f46e5;
-    --primary-light: #818cf8;
-    --success: #10b981;
-    --success-bg: rgba(16, 185, 129, 0.1);
-    --error: #ef4444;
-    --error-bg: rgba(239, 68, 68, 0.1);
-    --warning: #f59e0b;
-    --warning-bg: rgba(245, 158, 11, 0.1);
-    --bg-dark: #0f172a;
-    --bg-card: #1e293b;
-    --bg-card-hover: #334155;
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --border-color: #334155;
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 24px;
-    --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-    font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--bg-dark);
-    color: var(--text-primary);
-    min-height: 100vh;
-    line-height: 1.6;
-}
-.app-container { max-width: 600px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
-.app-header {
-    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-dark) 100%);
-    border-bottom: 1px solid var(--border-color);
-    position: sticky; top: 0; z-index: 100;
-}
-.header-content { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; }
-.logo { display: flex; align-items: center; gap: 0.75rem; }
-.logo-icon { font-size: 1.75rem; animation: float 3s ease-in-out infinite; }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-.logo h1 {
-    font-size: 1.25rem; font-weight: 700;
-    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
-.gen-date { font-size: 0.75rem; color: var(--text-muted); }
-.main-content { flex: 1; padding: 1.25rem; display: flex; flex-direction: column; gap: 1.25rem; }
-.section {
-    background: var(--bg-card); border-radius: var(--radius-lg); padding: 1.25rem;
-    border: 1px solid var(--border-color); transition: var(--transition);
-}
-.section:hover { border-color: var(--primary); box-shadow: var(--shadow-glow); }
-.section-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
-.section-icon { font-size: 1.25rem; }
-.section-header h2 { font-size: 1rem; font-weight: 600; flex: 1; }
-.select-wrapper { display: flex; gap: 0.75rem; }
-.list-select {
-    flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color);
-    color: var(--text-primary); padding: 0.875rem 1rem; border-radius: var(--radius-md);
-    font-size: 0.95rem; cursor: pointer; transition: var(--transition);
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem;
-}
-.list-select:focus { outline: none; border-color: var(--primary); }
-.list-select option { background: var(--bg-dark); color: var(--text-primary); }
-.list-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-top: 1rem; }
-.stat-item {
-    text-align: center; padding: 0.75rem; background: var(--bg-dark);
-    border-radius: var(--radius-md); border: 1px solid var(--border-color);
-}
-.stat-label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; }
-.stat-value { font-size: 1.5rem; font-weight: 700; }
-.stat-success .stat-value { color: var(--success); }
-.stat-pending .stat-value { color: var(--warning); }
-.scan-section { text-align: center; padding: 2rem 1.25rem; }
-.scan-btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 0.75rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    color: white; border: none; padding: 1.25rem 3rem; border-radius: var(--radius-xl);
-    font-size: 1.25rem; font-weight: 600; cursor: pointer; transition: var(--transition);
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4), var(--shadow-glow);
-    width: 100%; max-width: 300px; position: relative; overflow: hidden;
-}
-.scan-btn:disabled { background: var(--bg-card-hover); cursor: not-allowed; box-shadow: none; opacity: 0.6; }
-.scan-btn:not(:disabled):hover { transform: translateY(-2px); }
-.scan-icon { font-size: 1.5rem; }
-.scan-hint { margin-top: 1rem; font-size: 0.875rem; color: var(--text-muted); }
-.scanner-section {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: var(--bg-dark); z-index: 1000; padding: 1rem;
-    display: none; flex-direction: column;
-}
-.scanner-section.active { display: flex; }
-.scanner-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; }
-.scanner-header h3 { font-size: 1.25rem; }
-.close-scanner-btn {
-    background: var(--error); color: white; border: none;
-    width: 40px; height: 40px; border-radius: 50%; font-size: 1.25rem; cursor: pointer;
-}
-.scanner-reader { flex: 1; background: #000; border-radius: var(--radius-lg); overflow: hidden; max-height: 50vh; }
-.scanner-result {
-    margin-top: 1rem; padding: 1rem; border-radius: var(--radius-md); text-align: center; display: none;
-}
-.scanner-result.show { display: block; animation: slideIn 0.3s ease; }
-@keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-.scanner-result.success { background: var(--success-bg); border: 2px solid var(--success); }
-.scanner-result.error { background: var(--error-bg); border: 2px solid var(--error); }
-.scanner-result.warning { background: var(--warning-bg); border: 2px solid var(--warning); }
-.result-icon { font-size: 2.5rem; margin-bottom: 0.25rem; }
-.result-barcode { font-size: 1.1rem; font-weight: 700; font-family: 'Courier New', monospace; margin-bottom: 0.25rem; }
-.result-message { font-size: 0.9rem; color: var(--text-secondary); }
-.result-details { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color); }
-.result-details p { margin: 0.15rem 0; }
-.manual-input { display: flex; gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); }
-.manual-input input {
-    flex: 1; background: var(--bg-card); border: 1px solid var(--border-color);
-    color: var(--text-primary); padding: 0.875rem 1rem; border-radius: var(--radius-md); font-size: 1rem;
-}
-.manual-input input:focus { outline: none; border-color: var(--primary); }
-.manual-input button {
-    background: var(--primary); color: white; border: none; padding: 0.875rem 1.5rem;
-    border-radius: var(--radius-md); font-size: 1rem; font-weight: 600; cursor: pointer;
-}
-.history-section .section-header { margin-bottom: 0.75rem; }
-.clear-history-btn {
-    background: transparent; border: 1px solid var(--border-color); color: var(--text-muted);
-    padding: 0.375rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.75rem; cursor: pointer;
-}
-.clear-history-btn:hover { background: var(--error); border-color: var(--error); color: white; }
-.history-list { max-height: 250px; overflow-y: auto; }
-.empty-history { text-align: center; padding: 1.5rem; color: var(--text-muted); }
-.history-item {
-    display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem;
-    background: var(--bg-dark); border-radius: var(--radius-md); margin-bottom: 0.4rem;
-    border: 1px solid var(--border-color); animation: fadeIn 0.3s ease;
-}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.history-item.success { border-left: 3px solid var(--success); }
-.history-item.error { border-left: 3px solid var(--error); }
-.history-item.warning { border-left: 3px solid var(--warning); }
-.history-icon { font-size: 1.1rem; flex-shrink: 0; }
-.history-content { flex: 1; min-width: 0; }
-.history-barcode { font-weight: 600; font-family: 'Courier New', monospace; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.history-message { font-size: 0.7rem; color: var(--text-muted); }
-.history-time { font-size: 0.65rem; color: var(--text-muted); flex-shrink: 0; }
-.toast-container { position: fixed; top: 1rem; left: 50%; transform: translateX(-50%); z-index: 3000; width: 90%; max-width: 350px; }
-.toast {
-    background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md);
-    padding: 0.875rem 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4); text-align: center;
-    margin-bottom: 0.5rem; animation: slideDown 0.3s ease;
-}
-@keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-.toast.success { border-left: 3px solid var(--success); }
-.toast.error { border-left: 3px solid var(--error); }
-.toast.info { border-left: 3px solid var(--primary); }
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: var(--bg-dark); }
-::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-.hidden { display: none !important; }
+        /* ===== 基礎設定 ===== */
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --success: #10b981;
+            --success-light: #34d399;
+            --success-bg: rgba(16, 185, 129, 0.1);
+            --error: #ef4444;
+            --error-light: #f87171;
+            --error-bg: rgba(239, 68, 68, 0.1);
+            --warning: #f59e0b;
+            --warning-light: #fbbf24;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+            --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ===== 應用程式容器 ===== */
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== 頂部標題列 ===== */
+        .app-header {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-dark) 100%);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.25rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            font-size: 1.75rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .logo h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .icon-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--primary-light);
+        }
+
+        /* ===== 主要內容區 ===== */
+        .main-content {
+            flex: 1;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        /* ===== 區塊樣式 ===== */
+        .section {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .section:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-icon {
+            font-size: 1.25rem;
+        }
+
+        .section-header h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        /* ===== 上傳區域 ===== */
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg-dark);
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .upload-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* ===== 已載入檔案列表 ===== */
+        .loaded-files {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .loaded-files-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .loaded-files-title {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .clear-files-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .clear-files-btn:hover {
+            background: var(--error);
+            border-color: var(--error);
+            color: white;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg-dark);
+            border-radius: var(--radius-md);
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .file-item.active {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .file-icon {
+            font-size: 1.5rem;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .file-select-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .file-select-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .file-select-btn.selected {
+            background: var(--success);
+        }
+
+        /* ===== 清單統計 ===== */
+        .list-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.75rem;
+            background: var(--bg-dark);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stat-success .stat-value {
+            color: var(--success);
+        }
+
+        .stat-pending .stat-value {
+            color: var(--warning);
+        }
+
+        /* ===== 掃描按鈕 ===== */
+        .scan-section {
+            text-align: center;
+            padding: 2rem 1.25rem;
+        }
+
+        .scan-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 1.25rem 3rem;
+            border-radius: var(--radius-xl);
+            font-size: 1.25rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-lg), var(--shadow-glow);
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .scan-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .scan-btn:not(:disabled):hover::before {
+            left: 100%;
+        }
+
+        .scan-btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg), 0 0 30px rgba(99, 102, 241, 0.5);
+        }
+
+        .scan-btn:disabled {
+            background: var(--bg-card-hover);
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .scan-icon {
+            font-size: 1.5rem;
+        }
+
+        .scan-hint {
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== 掃描器區域 ===== */
+        .scanner-section {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-dark);
+            z-index: 1000;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .scanner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            flex-shrink: 0;
+        }
+
+        .scanner-header h3 {
+            font-size: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        .close-scanner-btn {
+            background: var(--error);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-scanner-btn:hover {
+            background: var(--error-light);
+            transform: scale(1.1);
+        }
+
+        .scanner-reader {
+            background: #000;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            height: 280px;
+            min-height: 280px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .scanner-reader video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 長方形掃描框線樣式 */
+        #reader__scan_region {
+            border: 3px solid var(--primary) !important;
+            border-radius: var(--radius-md) !important;
+            box-shadow: 0 0 0 3000px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        #reader__scan_region video {
+            object-fit: cover;
+        }
+
+        /* 掃描框閃爍動畫 */
+        @keyframes scanPulse {
+
+            0%,
+            100% {
+                border-color: var(--primary);
+                box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+            }
+
+            50% {
+                border-color: var(--primary-light);
+                box-shadow: 0 0 20px rgba(99, 102, 241, 0.8);
+            }
+        }
+
+        #reader {
+            width: 100%;
+            height: 100%;
+        }
+
+        #reader>div:first-child {
+            border: none !important;
+        }
+
+        .scanner-result {
+            margin-top: 0.75rem;
+            padding: 1rem;
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            text-align: center;
+            flex-shrink: 0;
+            animation: resultPop 0.3s ease;
+        }
+
+        @keyframes resultPop {
+            0% {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.02);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* 成功/失敗閃爍效果 */
+        .scanner-result.success {
+            background: var(--success-bg);
+            border: 2px solid var(--success);
+            animation: resultPop 0.3s ease, successFlash 0.5s ease;
+        }
+
+        .scanner-result.error {
+            background: var(--error-bg);
+            border: 2px solid var(--error);
+            animation: resultPop 0.3s ease, errorFlash 0.5s ease;
+        }
+
+        .scanner-result.warning {
+            background: var(--warning-bg);
+            border: 2px solid var(--warning);
+            animation: resultPop 0.3s ease, warningFlash 0.5s ease;
+        }
+
+        @keyframes successFlash {
+
+            0%,
+            100% {
+                background: var(--success-bg);
+            }
+
+            25%,
+            75% {
+                background: rgba(16, 185, 129, 0.3);
+            }
+        }
+
+        @keyframes errorFlash {
+
+            0%,
+            100% {
+                background: var(--error-bg);
+            }
+
+            25%,
+            75% {
+                background: rgba(239, 68, 68, 0.3);
+            }
+        }
+
+        @keyframes warningFlash {
+
+            0%,
+            100% {
+                background: var(--warning-bg);
+            }
+
+            25%,
+            75% {
+                background: rgba(245, 158, 11, 0.3);
+            }
+        }
+
+        .scanner-result .result-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .scanner-result .result-barcode {
+            font-size: 1.1rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+        }
+
+        .scanner-result .result-message {
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        /* 掃描器內的即時記錄區域 */
+        .scanner-history {
+            margin-top: 0.75rem;
+            flex: 1;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scanner-history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding: 0 0.25rem;
+        }
+
+        .scanner-history-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .scanner-history-count {
+            background: var(--primary);
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .scanner-history-list {
+            flex: 1;
+            overflow-y: auto;
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .scanner-history-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-dark);
+            border-radius: var(--radius-sm);
+            margin-bottom: 0.4rem;
+            border-left: 3px solid var(--border-color);
+            animation: slideInHistory 0.3s ease;
+        }
+
+        @keyframes slideInHistory {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .scanner-history-item.success {
+            border-left-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .scanner-history-item.error {
+            border-left-color: var(--error);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .scanner-history-item.warning {
+            border-left-color: var(--warning);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .scanner-history-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .scanner-history-icon {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .scanner-history-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .scanner-history-barcode {
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .scanner-history-message {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .scanner-history-time {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .scanner-history-empty {
+            text-align: center;
+            padding: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .manual-input {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .manual-input input {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.875rem 1rem;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .manual-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .manual-input button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.875rem 1.5rem;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .manual-input button:hover {
+            background: var(--primary-dark);
+        }
+
+        /* ===== 掃描結果 ===== */
+        .result-section {
+            padding: 0;
+            border: none;
+            background: transparent;
+        }
+
+        .result-section:hover {
+            box-shadow: none;
+            border-color: transparent;
+        }
+
+        .result-card {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-card.success {
+            background: var(--success-bg);
+            border: 2px solid var(--success);
+        }
+
+        .result-card.error {
+            background: var(--error-bg);
+            border: 2px solid var(--error);
+        }
+
+        .result-card.warning {
+            background: var(--warning-bg);
+            border: 2px solid var(--warning);
+        }
+
+        .result-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-card.success .result-icon {
+            color: var(--success);
+        }
+
+        .result-card.error .result-icon {
+            color: var(--error);
+        }
+
+        .result-card.warning .result-icon {
+            color: var(--warning);
+        }
+
+        .result-barcode {
+            font-size: 1.25rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-message {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        .result-details {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .result-details p {
+            margin: 0.25rem 0;
+        }
+
+        /* ===== 掃描歷史 ===== */
+        .clear-history-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.375rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-family: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .clear-history-btn:hover {
+            background: var(--error);
+            border-color: var(--error);
+            color: white;
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg-dark);
+            border-radius: var(--radius-md);
+            margin-bottom: 0.5rem;
+            border: 1px solid var(--border-color);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .history-item.success {
+            border-left: 3px solid var(--success);
+        }
+
+        .history-item.error {
+            border-left: 3px solid var(--error);
+        }
+
+        .history-item.warning {
+            border-left: 3px solid var(--warning);
+        }
+
+        .history-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .history-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .history-barcode {
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-message {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .history-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        /* ===== Toast 通知 ===== */
+        .toast-container {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            width: 90%;
+            max-width: 350px;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.25rem;
+            box-shadow: var(--shadow-lg);
+            animation: slideDown 0.3s ease;
+            text-align: center;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast.success {
+            border-left: 3px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 3px solid var(--error);
+        }
+
+        .toast.info {
+            border-left: 3px solid var(--primary);
+        }
+
+        /* ===== 滾動條樣式 ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* ===== 響應式調整 ===== */
+        @media (max-width: 480px) {
+            html {
+                font-size: 14px;
+            }
+
+            .app-header {
+                position: relative;
+            }
+
+            .scan-btn {
+                width: 100%;
+                padding: 1.25rem 1.5rem;
+            }
+
+            .list-stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* ===== 隱藏元素 ===== */
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
+
 <body>
     <div class="app-container">
+        <!-- 頂部標題列 -->
         <header class="app-header">
             <div class="header-content">
                 <div class="logo">
                     <span class="logo-icon">📦</span>
                     <h1>條碼比對系統</h1>
                 </div>
-                <div class="gen-date">資料日期: 2026-01-16</div>
+                <div class="header-actions">
+                    <button class="icon-btn" id="exportBtn" title="匯出報告">📊</button>
+                </div>
             </div>
         </header>
 
+        <!-- 主要內容區 -->
         <main class="main-content">
-            <section class="section list-section">
+            <!-- 上傳 Excel 區域 -->
+            <section class="section upload-section">
+                <div class="section-header">
+                    <span class="section-icon">📁</span>
+                    <h2>上傳 Excel 清單</h2>
+                </div>
+
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📤</div>
+                    <div class="upload-text">點擊或拖曳 Excel 檔案到此處</div>
+                    <div class="upload-hint">支援 .xlsx 格式，可同時上傳多個檔案</div>
+                    <input type="file" class="file-input" id="fileInput" accept=".xlsx,.xls" multiple>
+                </div>
+
+                <!-- 已載入檔案列表 -->
+                <div class="loaded-files hidden" id="loadedFiles">
+                    <div class="loaded-files-header">
+                        <span class="loaded-files-title">已載入的清單</span>
+                        <button class="clear-files-btn" id="clearFilesBtn">全部清除</button>
+                    </div>
+                    <div class="file-list" id="fileList"></div>
+                </div>
+            </section>
+
+            <!-- 當前選擇的清單統計 -->
+            <section class="section stats-section hidden" id="statsSection">
                 <div class="section-header">
                     <span class="section-icon">📋</span>
-                    <h2>選擇清單</h2>
+                    <h2 id="selectedListName">未選擇清單</h2>
                 </div>
-                <div class="select-wrapper">
-                    <select id="listSelect" class="list-select">
-                        <option value="">-- 請選擇清單 --</option>
-                    </select>
-                </div>
-                <div class="list-stats hidden" id="listStats">
+                <div class="list-stats">
                     <div class="stat-item">
                         <span class="stat-label">清單條碼數</span>
                         <span class="stat-value" id="totalCount">0</span>
@@ -215,14 +1127,26 @@ body {
                 </div>
             </section>
 
+            <!-- 掃描按鈕區 -->
             <section class="section scan-section">
                 <button class="scan-btn" id="scanBtn" disabled>
                     <span class="scan-icon">📷</span>
-                    <span>開始掃描</span>
+                    <span class="scan-text">開始掃描</span>
                 </button>
-                <p class="scan-hint" id="scanHint">請先選擇清單後開始掃描</p>
+                <p class="scan-hint" id="scanHint">請先上傳並選擇 Excel 清單</p>
             </section>
 
+            <!-- 最新掃描結果 -->
+            <section class="section result-section hidden" id="resultSection">
+                <div class="result-card" id="resultCard">
+                    <div class="result-icon" id="resultIcon">✓</div>
+                    <div class="result-barcode" id="resultBarcode"></div>
+                    <div class="result-message" id="resultMessage"></div>
+                    <div class="result-details" id="resultDetails"></div>
+                </div>
+            </section>
+
+            <!-- 掃描歷史記錄 -->
             <section class="section history-section">
                 <div class="section-header">
                     <span class="section-icon">📜</span>
@@ -230,1837 +1154,732 @@ body {
                     <button class="clear-history-btn" id="clearHistoryBtn">清除</button>
                 </div>
                 <div class="history-list" id="historyList">
-                    <div class="empty-history"><p>尚無掃描記錄</p></div>
+                    <div class="empty-history">
+                        <p>尚無掃描記錄</p>
+                    </div>
                 </div>
             </section>
         </main>
     </div>
 
-    <div class="scanner-section" id="scannerSection">
+    <!-- 掃描器區域（隱藏） -->
+    <div class="scanner-section hidden" id="scannerSection">
         <div class="scanner-header">
-            <h3>掃描條碼</h3>
+            <h3>📷 掃描條碼</h3>
             <button class="close-scanner-btn" id="closeScannerBtn">✕</button>
         </div>
         <div id="reader" class="scanner-reader"></div>
-        <div class="scanner-result" id="scannerResult">
-            <div class="result-icon" id="scannerResultIcon"></div>
+        <div class="scanner-result hidden" id="scannerResult">
+            <div class="result-icon" id="scannerResultIcon">✓</div>
             <div class="result-barcode" id="scannerResultBarcode"></div>
             <div class="result-message" id="scannerResultMessage"></div>
-            <div class="result-details" id="scannerResultDetails"></div>
         </div>
         <div class="manual-input">
             <input type="text" id="manualBarcode" placeholder="或手動輸入條碼...">
             <button id="manualSubmitBtn">確認</button>
         </div>
+        <!-- 掃描器內的即時記錄 -->
+        <div class="scanner-history">
+            <div class="scanner-history-header">
+                <span class="scanner-history-title">
+                    📜 即時掃描記錄
+                    <span class="scanner-history-count" id="scannerHistoryCount">0</span>
+                </span>
+            </div>
+            <div class="scanner-history-list" id="scannerHistoryList">
+                <div class="scanner-history-empty">開始掃描條碼...</div>
+            </div>
+        </div>
     </div>
 
+    <!-- Toast 通知 -->
     <div class="toast-container" id="toastContainer"></div>
 
+    <!-- SheetJS 用於讀取 Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- html5-qrcode 條碼掃描器 -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
     <script>
-// ===== 內嵌資料 =====
-const LISTS_DATA = [
-  {
-    "serial": "01",
-    "name": "BGG換標併TRAY-0115 TO RA169AD.GG0040_AUO-BIN1-V02",
-    "barcodes": [
-      "0BGG251200313",
-      "0BGG251200316",
-      "0BGG251200838",
-      "0BGG251200841",
-      "0BGG251200845",
-      "0BGG251200876",
-      "0BGG251200879",
-      "0BGG251200888",
-      "0BGG251200894",
-      "0BGG251200986",
-      "0BGG251200992",
-      "0BGG251201026",
-      "0BGG251201040",
-      "0BGG251201043",
-      "0BGG251201046",
-      "0BGG251201066",
-      "0BGG251201075",
-      "0BGG260100011",
-      "0BGG260100014",
-      "0BGG260100033",
-      "0BGG260100141",
-      "0BGG260100147",
-      "0BGG260100150",
-      "0BGG260100153",
-      "0BGG260100156"
-    ],
-    "fullData": [
-      {
-        "barcode": "0BGG251200313",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMK940.1.V"
-      },
-      {
-        "barcode": "0BGG251200316",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMG487.1.V"
-      },
-      {
-        "barcode": "0BGG251200838",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMH987.1.V"
-      },
-      {
-        "barcode": "0BGG251200841",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMF507.1.V"
-      },
-      {
-        "barcode": "0BGG251200845",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMH489.1.V"
-      },
-      {
-        "barcode": "0BGG251200876",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMM723.1.V"
-      },
-      {
-        "barcode": "0BGG251200879",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMK232.1.V"
-      },
-      {
-        "barcode": "0BGG251200888",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMG400.1.V"
-      },
-      {
-        "barcode": "0BGG251200894",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMH405.1.V"
-      },
-      {
-        "barcode": "0BGG251200986",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMK940.1.V"
-      },
-      {
-        "barcode": "0BGG251200992",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMM232.1.V"
-      },
-      {
-        "barcode": "0BGG251201026",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMM805.1.V"
-      },
-      {
-        "barcode": "0BGG251201040",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMM804.1.V"
-      },
-      {
-        "barcode": "0BGG251201043",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMM232.1.V"
-      },
-      {
-        "barcode": "0BGG251201046",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMK232.1.V"
-      },
-      {
-        "barcode": "0BGG251201066",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMK231.1.V"
-      },
-      {
-        "barcode": "0BGG251201075",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMM722.1.V"
-      },
-      {
-        "barcode": "0BGG260100011",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMM804.1.V"
-      },
-      {
-        "barcode": "0BGG260100014",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMH489.1.V"
-      },
-      {
-        "barcode": "0BGG260100033",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMM807.1.V"
-      },
-      {
-        "barcode": "0BGG260100141",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMK509.1.V"
-      },
-      {
-        "barcode": "0BGG260100147",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMK092.1.V"
-      },
-      {
-        "barcode": "0BGG260100150",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMM720.1.V"
-      },
-      {
-        "barcode": "0BGG260100153",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMM347.1.V"
-      },
-      {
-        "barcode": "0BGG260100156",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG0040_AUO",
-        "batch": "GMH778.1.V"
-      }
-    ]
-  },
-  {
-    "serial": "02",
-    "name": "BGG換標併TRAY-0115 TO RA169AD.GG1040_AUO-BIN51-V02",
-    "barcodes": [
-      "0BGG251200314",
-      "0BGG251200317",
-      "0BGG251200819",
-      "0BGG251200824",
-      "0BGG251200839",
-      "0BGG251200842",
-      "0BGG251200846",
-      "0BGG251200858",
-      "0BGG251200877",
-      "0BGG251200880",
-      "0BGG251200889",
-      "0BGG251200892",
-      "0BGG251200895",
-      "0BGG251200905",
-      "0BGG251200918",
-      "0BGG251200987",
-      "0BGG251200990",
-      "0BGG251200993",
-      "0BGG251201000",
-      "0BGG251201003",
-      "0BGG251201027",
-      "0BGG251201041",
-      "0BGG251201044",
-      "0BGG251201047",
-      "0BGG251201051",
-      "0BGG251201061",
-      "0BGG251201064",
-      "0BGG251201067",
-      "0BGG251201070",
-      "0BGG251201073",
-      "0BGG251201076",
-      "0BGG260100012",
-      "0BGG260100015",
-      "0BGG260100034",
-      "0BGG260100056",
-      "0BGG260100059",
-      "0BGG260100082",
-      "0BGG260100085",
-      "0BGG260100126",
-      "0BGG260100136",
-      "0BGG260100139",
-      "0BGG260100142",
-      "0BGG260100145",
-      "0BGG260100148",
-      "0BGG260100151",
-      "0BGG260100154",
-      "0BGG260100157",
-      "0BGG260100236"
-    ],
-    "fullData": [
-      {
-        "barcode": "0BGG251200314",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMK940.1.V"
-      },
-      {
-        "barcode": "0BGG251200317",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMG487.1.V"
-      },
-      {
-        "barcode": "0BGG251200819",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMH984.1.V"
-      },
-      {
-        "barcode": "0BGG251200824",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMH406.1.V"
-      },
-      {
-        "barcode": "0BGG251200839",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMH987.1.V"
-      },
-      {
-        "barcode": "0BGG251200842",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMF507.1.V"
-      },
-      {
-        "barcode": "0BGG251200846",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMH489.1.V"
-      },
-      {
-        "barcode": "0BGG251200858",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM720.1.V"
-      },
-      {
-        "barcode": "0BGG251200877",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM723.1.V"
-      },
-      {
-        "barcode": "0BGG251200880",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMK232.1.V"
-      },
-      {
-        "barcode": "0BGG251200889",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMG400.1.V"
-      },
-      {
-        "barcode": "0BGG251200892",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMK093.1.V"
-      },
-      {
-        "barcode": "0BGG251200895",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMH405.1.V"
-      },
-      {
-        "barcode": "0BGG251200905",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMH489.1.V"
-      },
-      {
-        "barcode": "0BGG251200918",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMH984.1.V"
-      },
-      {
-        "barcode": "0BGG251200987",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMK940.1.V"
-      },
-      {
-        "barcode": "0BGG251200990",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMH988.1.V"
-      },
-      {
-        "barcode": "0BGG251200993",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM232.1.V"
-      },
-      {
-        "barcode": "0BGG251201000",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM720.1.V"
-      },
-      {
-        "barcode": "0BGG251201003",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM043.1.V"
-      },
-      {
-        "barcode": "0BGG251201027",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM805.1.V"
-      },
-      {
-        "barcode": "0BGG251201041",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM804.1.V"
-      },
-      {
-        "barcode": "0BGG251201044",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM232.1.V"
-      },
-      {
-        "barcode": "0BGG251201047",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMK232.1.V"
-      },
-      {
-        "barcode": "0BGG251201051",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM807.1.V"
-      },
-      {
-        "barcode": "0BGG251201061",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM807.1.V"
-      },
-      {
-        "barcode": "0BGG251201064",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM804.1.V"
-      },
-      {
-        "barcode": "0BGG251201067",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMK231.1.V"
-      },
-      {
-        "barcode": "0BGG251201070",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMH987.1.V"
-      },
-      {
-        "barcode": "0BGG251201073",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMH661.1.V"
-      },
-      {
-        "barcode": "0BGG251201076",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM722.1.V"
-      },
-      {
-        "barcode": "0BGG260100012",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM804.1.V"
-      },
-      {
-        "barcode": "0BGG260100015",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMH489.1.V"
-      },
-      {
-        "barcode": "0BGG260100034",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM807.1.V"
-      },
-      {
-        "barcode": "0BGG260100056",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM722.1.V"
-      },
-      {
-        "barcode": "0BGG260100059",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMK093.1.V"
-      },
-      {
-        "barcode": "0BGG260100082",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM723.1.V"
-      },
-      {
-        "barcode": "0BGG260100085",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM722.1.V"
-      },
-      {
-        "barcode": "0BGG260100126",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMH665.1.V"
-      },
-      {
-        "barcode": "0BGG260100136",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM809.1.V"
-      },
-      {
-        "barcode": "0BGG260100139",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM804.1.V"
-      },
-      {
-        "barcode": "0BGG260100142",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMK509.1.V"
-      },
-      {
-        "barcode": "0BGG260100145",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMK092.1.V"
-      },
-      {
-        "barcode": "0BGG260100148",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMK092.1.V"
-      },
-      {
-        "barcode": "0BGG260100151",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM720.1.V"
-      },
-      {
-        "barcode": "0BGG260100154",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM347.1.V"
-      },
-      {
-        "barcode": "0BGG260100157",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMH778.1.V"
-      },
-      {
-        "barcode": "0BGG260100236",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM806.1.V"
-      }
-    ]
-  },
-  {
-    "serial": "03",
-    "name": "BGG換標併TRAY-0115 TO RA169AD.GG1040_AUO-BIN51-V04",
-    "barcodes": [
-      "0BGG260100133",
-      "0BGG260100229",
-      "0BGG260100251",
-      "0BGG260100284"
-    ],
-    "fullData": [
-      {
-        "barcode": "0BGG260100133",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMN236.1.V"
-      },
-      {
-        "barcode": "0BGG260100229",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMG940.1.V"
-      },
-      {
-        "barcode": "0BGG260100251",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMM618.1.V"
-      },
-      {
-        "barcode": "0BGG260100284",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG1040_AUO",
-        "batch": "GMG940.1.V"
-      }
-    ]
-  },
-  {
-    "serial": "04",
-    "name": "BGG換標併TRAY-0115 TO RA169AD.GC0040_AUO-BIN1",
-    "barcodes": [
-      "0BGG251200239",
-      "0BGG251200248",
-      "0BGG251200334",
-      "0BGG251200376",
-      "0BGG251200402",
-      "0BGG251200408",
-      "0BGG251200414",
-      "0BGG251200456",
-      "0BGG251200483",
-      "0BGG251200486",
-      "0BGG251200489",
-      "0BGG251200510",
-      "0BGG251200574",
-      "0BGG251200577",
-      "0BGG251200607",
-      "0BGG251200650",
-      "0BGG251200675",
-      "0BGG251200689"
-    ],
-    "fullData": [
-      {
-        "barcode": "0BGG251200239",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMM347.1.V"
-      },
-      {
-        "barcode": "0BGG251200248",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMH988.1.V"
-      },
-      {
-        "barcode": "0BGG251200334",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMH663.1.V"
-      },
-      {
-        "barcode": "0BGG251200376",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMK510.1.V"
-      },
-      {
-        "barcode": "0BGG251200402",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMM721.1.V"
-      },
-      {
-        "barcode": "0BGG251200408",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMH490.1.V"
-      },
-      {
-        "barcode": "0BGG251200414",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMG860.1.V"
-      },
-      {
-        "barcode": "0BGG251200456",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMK940.1.V"
-      },
-      {
-        "barcode": "0BGG251200483",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMH404.1.V"
-      },
-      {
-        "barcode": "0BGG251200486",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMG399.1.V"
-      },
-      {
-        "barcode": "0BGG251200489",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMF507.1.V"
-      },
-      {
-        "barcode": "0BGG251200510",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMG052.1.V"
-      },
-      {
-        "barcode": "0BGG251200574",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMH781.1.V"
-      },
-      {
-        "barcode": "0BGG251200577",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMH404.1.V"
-      },
-      {
-        "barcode": "0BGG251200607",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMH777.1.V"
-      },
-      {
-        "barcode": "0BGG251200650",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMG860.1.V"
-      },
-      {
-        "barcode": "0BGG251200675",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMG768.1.V"
-      },
-      {
-        "barcode": "0BGG251200689",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC0040_AUO",
-        "batch": "GMF507.1.V"
-      }
-    ]
-  },
-  {
-    "serial": "05",
-    "name": "BGG換標併TRAY-0115 TO RA169AD.GC1040_AUO-BIN51",
-    "barcodes": [
-      "0BGG251200371",
-      "0BGG251200383",
-      "0BGG251200403",
-      "0BGG251200406",
-      "0BGG251200409",
-      "0BGG251200415",
-      "0BGG251200454",
-      "0BGG251200457",
-      "0BGG251200478",
-      "0BGG251200481",
-      "0BGG251200484",
-      "0BGG251200487",
-      "0BGG251200490",
-      "0BGG251200497",
-      "0BGG251200511",
-      "0BGG251200518",
-      "0BGG251200565",
-      "0BGG251200575",
-      "0BGG251200578",
-      "0BGG251200587",
-      "0BGG251200598",
-      "0BGG251200605",
-      "0BGG251200608",
-      "0BGG251200651",
-      "0BGG251200654",
-      "0BGG251200676",
-      "0BGG251200690",
-      "0BGG251200693",
-      "0BGG251200696",
-      "0BGG251200716",
-      "0BGG251200719"
-    ],
-    "fullData": [
-      {
-        "barcode": "0BGG251200371",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMM721.1.V"
-      },
-      {
-        "barcode": "0BGG251200383",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMH404.1.V"
-      },
-      {
-        "barcode": "0BGG251200403",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMM721.1.V"
-      },
-      {
-        "barcode": "0BGG251200406",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMK940.1.V"
-      },
-      {
-        "barcode": "0BGG251200409",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMH490.1.V"
-      },
-      {
-        "barcode": "0BGG251200415",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMG860.1.V"
-      },
-      {
-        "barcode": "0BGG251200454",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMG860.1.V"
-      },
-      {
-        "barcode": "0BGG251200457",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMK940.1.V"
-      },
-      {
-        "barcode": "0BGG251200478",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMK510.1.V"
-      },
-      {
-        "barcode": "0BGG251200481",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMH776.1.V"
-      },
-      {
-        "barcode": "0BGG251200484",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMH404.1.V"
-      },
-      {
-        "barcode": "0BGG251200487",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMG399.1.V"
-      },
-      {
-        "barcode": "0BGG251200490",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMF507.1.V"
-      },
-      {
-        "barcode": "0BGG251200497",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMG052.1.V"
-      },
-      {
-        "barcode": "0BGG251200511",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMG052.1.V"
-      },
-      {
-        "barcode": "0BGG251200518",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMG399.1.V"
-      },
-      {
-        "barcode": "0BGG251200565",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMH779.1.V"
-      },
-      {
-        "barcode": "0BGG251200575",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMH781.1.V"
-      },
-      {
-        "barcode": "0BGG251200578",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMH404.1.V"
-      },
-      {
-        "barcode": "0BGG251200587",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMG768.1.V"
-      },
-      {
-        "barcode": "0BGG251200598",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMH406.1.V"
-      },
-      {
-        "barcode": "0BGG251200605",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMH779.1.V"
-      },
-      {
-        "barcode": "0BGG251200608",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMH777.1.V"
-      },
-      {
-        "barcode": "0BGG251200651",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMG860.1.V"
-      },
-      {
-        "barcode": "0BGG251200654",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMF507.1.V"
-      },
-      {
-        "barcode": "0BGG251200676",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMG768.1.V"
-      },
-      {
-        "barcode": "0BGG251200690",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMF507.1.V"
-      },
-      {
-        "barcode": "0BGG251200693",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMH661.1.V"
-      },
-      {
-        "barcode": "0BGG251200696",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMG399.1.V"
-      },
-      {
-        "barcode": "0BGG251200716",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMH778.1.V"
-      },
-      {
-        "barcode": "0BGG251200719",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC1040_AUO",
-        "batch": "GMH489.1.V"
-      }
-    ]
-  },
-  {
-    "serial": "06",
-    "name": "BGG換標併TRAY-0115 TO RA169AD.GC2040_AUO-BIN52",
-    "barcodes": [
-      "0BGG251200384",
-      "0BGG251200404",
-      "0BGG251200410",
-      "0BGG251200413",
-      "0BGG251200416",
-      "0BGG251200427",
-      "0BGG251200458",
-      "0BGG251200485",
-      "0BGG251200488",
-      "0BGG251200491",
-      "0BGG251200498",
-      "0BGG251200512",
-      "0BGG251200519",
-      "0BGG251200566",
-      "0BGG251200576",
-      "0BGG251200579",
-      "0BGG251200599",
-      "0BGG251200606",
-      "0BGG251200609",
-      "0BGG251200649",
-      "0BGG251200652",
-      "0BGG251200655",
-      "0BGG251200691",
-      "0BGG251200697",
-      "0BGG251200720"
-    ],
-    "fullData": [
-      {
-        "barcode": "0BGG251200384",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMH404.1.V"
-      },
-      {
-        "barcode": "0BGG251200404",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMM721.1.V"
-      },
-      {
-        "barcode": "0BGG251200410",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMH490.1.V"
-      },
-      {
-        "barcode": "0BGG251200413",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMH403.1.V"
-      },
-      {
-        "barcode": "0BGG251200416",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMG860.1.V"
-      },
-      {
-        "barcode": "0BGG251200427",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMG052.1.V"
-      },
-      {
-        "barcode": "0BGG251200458",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMK940.1.V"
-      },
-      {
-        "barcode": "0BGG251200485",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMH404.1.V"
-      },
-      {
-        "barcode": "0BGG251200488",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMG399.1.V"
-      },
-      {
-        "barcode": "0BGG251200491",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMF507.1.V"
-      },
-      {
-        "barcode": "0BGG251200498",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMG052.1.V"
-      },
-      {
-        "barcode": "0BGG251200512",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMG052.1.V"
-      },
-      {
-        "barcode": "0BGG251200519",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMG399.1.V"
-      },
-      {
-        "barcode": "0BGG251200566",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMH779.1.V"
-      },
-      {
-        "barcode": "0BGG251200576",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMH781.1.V"
-      },
-      {
-        "barcode": "0BGG251200579",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMH404.1.V"
-      },
-      {
-        "barcode": "0BGG251200599",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMH406.1.V"
-      },
-      {
-        "barcode": "0BGG251200606",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMH779.1.V"
-      },
-      {
-        "barcode": "0BGG251200609",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMH777.1.V"
-      },
-      {
-        "barcode": "0BGG251200649",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMH403.1.V"
-      },
-      {
-        "barcode": "0BGG251200652",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMG860.1.V"
-      },
-      {
-        "barcode": "0BGG251200655",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMF507.1.V"
-      },
-      {
-        "barcode": "0BGG251200691",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMF507.1.V"
-      },
-      {
-        "barcode": "0BGG251200697",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMG399.1.V"
-      },
-      {
-        "barcode": "0BGG251200720",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GC2040_AUO",
-        "batch": "GMH489.1.V"
-      }
-    ]
-  },
-  {
-    "serial": "07",
-    "name": "BGG換標併TRAY-0115 TO RA169AD.GG2040_AUO-BIN52-V02",
-    "barcodes": [
-      "0BGG251200315",
-      "0BGG251200318",
-      "0BGG251200825",
-      "0BGG251200840",
-      "0BGG251200843",
-      "0BGG251200847",
-      "0BGG251200862",
-      "0BGG251200865",
-      "0BGG251200878",
-      "0BGG251200881",
-      "0BGG251200890",
-      "0BGG251200893",
-      "0BGG251200896",
-      "0BGG251200903",
-      "0BGG251200906",
-      "0BGG251200919",
-      "0BGG251200923",
-      "0BGG251200988",
-      "0BGG251200991",
-      "0BGG251200994",
-      "0BGG251200997",
-      "0BGG251201001",
-      "0BGG251201004",
-      "0BGG251201028",
-      "0BGG251201034",
-      "0BGG251201042",
-      "0BGG251201045",
-      "0BGG251201048",
-      "0BGG251201052",
-      "0BGG251201062",
-      "0BGG251201065",
-      "0BGG251201068",
-      "0BGG251201071",
-      "0BGG251201074",
-      "0BGG251201077",
-      "0BGG260100013",
-      "0BGG260100016",
-      "0BGG260100035",
-      "0BGG260100060",
-      "0BGG260100083",
-      "0BGG260100086",
-      "0BGG260100124",
-      "0BGG260100127",
-      "0BGG260100137",
-      "0BGG260100140",
-      "0BGG260100143",
-      "0BGG260100146",
-      "0BGG260100149",
-      "0BGG260100152",
-      "0BGG260100155",
-      "0BGG260100158",
-      "0BGG260100203",
-      "0BGG260100237"
-    ],
-    "fullData": [
-      {
-        "barcode": "0BGG251200315",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK940.1.V"
-      },
-      {
-        "barcode": "0BGG251200318",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMG487.1.V"
-      },
-      {
-        "barcode": "0BGG251200825",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMH406.1.V"
-      },
-      {
-        "barcode": "0BGG251200840",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMH987.1.V"
-      },
-      {
-        "barcode": "0BGG251200843",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMF507.1.V"
-      },
-      {
-        "barcode": "0BGG251200847",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMH489.1.V"
-      },
-      {
-        "barcode": "0BGG251200862",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK509.1.V"
-      },
-      {
-        "barcode": "0BGG251200865",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMH987.1.V"
-      },
-      {
-        "barcode": "0BGG251200878",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM723.1.V"
-      },
-      {
-        "barcode": "0BGG251200881",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK232.1.V"
-      },
-      {
-        "barcode": "0BGG251200890",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMG400.1.V"
-      },
-      {
-        "barcode": "0BGG251200893",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK093.1.V"
-      },
-      {
-        "barcode": "0BGG251200896",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMH405.1.V"
-      },
-      {
-        "barcode": "0BGG251200903",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM043.1.V"
-      },
-      {
-        "barcode": "0BGG251200906",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMH489.1.V"
-      },
-      {
-        "barcode": "0BGG251200919",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMH984.1.V"
-      },
-      {
-        "barcode": "0BGG251200923",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK092.1.V"
-      },
-      {
-        "barcode": "0BGG251200988",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK940.1.V"
-      },
-      {
-        "barcode": "0BGG251200991",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMH988.1.V"
-      },
-      {
-        "barcode": "0BGG251200994",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM232.1.V"
-      },
-      {
-        "barcode": "0BGG251200997",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK232.1.V"
-      },
-      {
-        "barcode": "0BGG251201001",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM720.1.V"
-      },
-      {
-        "barcode": "0BGG251201004",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM043.1.V"
-      },
-      {
-        "barcode": "0BGG251201028",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM805.1.V"
-      },
-      {
-        "barcode": "0BGG251201034",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM232.1.V"
-      },
-      {
-        "barcode": "0BGG251201042",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM804.1.V"
-      },
-      {
-        "barcode": "0BGG251201045",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM232.1.V"
-      },
-      {
-        "barcode": "0BGG251201048",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK232.1.V"
-      },
-      {
-        "barcode": "0BGG251201052",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM807.1.V"
-      },
-      {
-        "barcode": "0BGG251201062",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM807.1.V"
-      },
-      {
-        "barcode": "0BGG251201065",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM804.1.V"
-      },
-      {
-        "barcode": "0BGG251201068",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK231.1.V"
-      },
-      {
-        "barcode": "0BGG251201071",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMH987.1.V"
-      },
-      {
-        "barcode": "0BGG251201074",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMH661.1.V"
-      },
-      {
-        "barcode": "0BGG251201077",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM722.1.V"
-      },
-      {
-        "barcode": "0BGG260100013",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM804.1.V"
-      },
-      {
-        "barcode": "0BGG260100016",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMH489.1.V"
-      },
-      {
-        "barcode": "0BGG260100035",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM807.1.V"
-      },
-      {
-        "barcode": "0BGG260100060",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK093.1.V"
-      },
-      {
-        "barcode": "0BGG260100083",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM723.1.V"
-      },
-      {
-        "barcode": "0BGG260100086",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM722.1.V"
-      },
-      {
-        "barcode": "0BGG260100124",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM804.1.V"
-      },
-      {
-        "barcode": "0BGG260100127",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMH665.1.V"
-      },
-      {
-        "barcode": "0BGG260100137",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM809.1.V"
-      },
-      {
-        "barcode": "0BGG260100140",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM804.1.V"
-      },
-      {
-        "barcode": "0BGG260100143",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK509.1.V"
-      },
-      {
-        "barcode": "0BGG260100146",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK092.1.V"
-      },
-      {
-        "barcode": "0BGG260100149",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK092.1.V"
-      },
-      {
-        "barcode": "0BGG260100152",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM720.1.V"
-      },
-      {
-        "barcode": "0BGG260100155",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM347.1.V"
-      },
-      {
-        "barcode": "0BGG260100158",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMH778.1.V"
-      },
-      {
-        "barcode": "0BGG260100203",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK507.1.V"
-      },
-      {
-        "barcode": "0BGG260100237",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM806.1.V"
-      }
-    ]
-  },
-  {
-    "serial": "08",
-    "name": "BGG換標併TRAY-0115 TO RA169AD.GG2040_AUO-BIN52-V04",
-    "barcodes": [
-      "0BGG260100134",
-      "0BGG260100214",
-      "0BGG260100230",
-      "0BGG260100252",
-      "0BGG260100271"
-    ],
-    "fullData": [
-      {
-        "barcode": "0BGG260100134",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMN236.1.V"
-      },
-      {
-        "barcode": "0BGG260100214",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMK941.1.V"
-      },
-      {
-        "barcode": "0BGG260100230",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMG940.1.V"
-      },
-      {
-        "barcode": "0BGG260100252",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMM618.1.V"
-      },
-      {
-        "barcode": "0BGG260100271",
-        "customer": "瑞鼎科技",
-        "product": "RA169AD.GG2040_AUO",
-        "batch": "GMG940.1.V"
-      }
-    ]
-  }
-];
+        /**
+         * 條碼比對系統 - 純前端版本
+         */
 
-// ===== 全域變數 =====
-let html5QrCode = null;
-let selectedListIndex = -1;
-let scannedBarcodes = new Set();
-let scanHistory = [];
+        // ===== 全域變數 =====
+        let html5QrCode = null;
+        let loadedFiles = [];  // { name, barcodes: [], fullData: [] }
+        let selectedFileIndex = -1;
+        let scannedBarcodes = new Set();
+        let scanHistory = [];
 
-// ===== DOM 元素 =====
-const listSelect = document.getElementById('listSelect');
-const listStats = document.getElementById('listStats');
-const totalCount = document.getElementById('totalCount');
-const scannedCount = document.getElementById('scannedCount');
-const pendingCount = document.getElementById('pendingCount');
-const scanBtn = document.getElementById('scanBtn');
-const scanHint = document.getElementById('scanHint');
-const scannerSection = document.getElementById('scannerSection');
-const closeScannerBtn = document.getElementById('closeScannerBtn');
-const manualBarcode = document.getElementById('manualBarcode');
-const manualSubmitBtn = document.getElementById('manualSubmitBtn');
-const scannerResult = document.getElementById('scannerResult');
-const scannerResultIcon = document.getElementById('scannerResultIcon');
-const scannerResultBarcode = document.getElementById('scannerResultBarcode');
-const scannerResultMessage = document.getElementById('scannerResultMessage');
-const scannerResultDetails = document.getElementById('scannerResultDetails');
-const historyList = document.getElementById('historyList');
-const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-const toastContainer = document.getElementById('toastContainer');
+        // ===== DOM 元素 =====
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const loadedFilesSection = document.getElementById('loadedFiles');
+        const fileList = document.getElementById('fileList');
+        const clearFilesBtn = document.getElementById('clearFilesBtn');
+        const statsSection = document.getElementById('statsSection');
+        const selectedListName = document.getElementById('selectedListName');
+        const totalCount = document.getElementById('totalCount');
+        const scannedCount = document.getElementById('scannedCount');
+        const pendingCount = document.getElementById('pendingCount');
+        const scanBtn = document.getElementById('scanBtn');
+        const scanHint = document.getElementById('scanHint');
+        const scannerSection = document.getElementById('scannerSection');
+        const closeScannerBtn = document.getElementById('closeScannerBtn');
+        const manualBarcode = document.getElementById('manualBarcode');
+        const manualSubmitBtn = document.getElementById('manualSubmitBtn');
+        const scannerResult = document.getElementById('scannerResult');
+        const scannerResultIcon = document.getElementById('scannerResultIcon');
+        const scannerResultBarcode = document.getElementById('scannerResultBarcode');
+        const scannerResultMessage = document.getElementById('scannerResultMessage');
+        const resultSection = document.getElementById('resultSection');
+        const resultCard = document.getElementById('resultCard');
+        const resultIcon = document.getElementById('resultIcon');
+        const resultBarcode = document.getElementById('resultBarcode');
+        const resultMessage = document.getElementById('resultMessage');
+        const resultDetails = document.getElementById('resultDetails');
+        const historyList = document.getElementById('historyList');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const toastContainer = document.getElementById('toastContainer');
+        const scannerHistoryList = document.getElementById('scannerHistoryList');
+        const scannerHistoryCount = document.getElementById('scannerHistoryCount');
 
-// ===== 初始化 =====
-document.addEventListener('DOMContentLoaded', () => {
-    populateListSelect();
-    loadFromStorage();
-    setupEventListeners();
-});
+        // 掃描器內的即時記錄（僅限當次掃描期間）
+        let scannerSessionHistory = [];
 
-function populateListSelect() {
-    LISTS_DATA.forEach((list, index) => {
-        const option = document.createElement('option');
-        option.value = index;
-        option.textContent = `${list.serial} - ${list.name}`;
-        listSelect.appendChild(option);
-    });
-}
+        // ===== 初始化 =====
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromStorage();
+            setupEventListeners();
+            renderFileList();
+            updateStats();
+        });
 
-function setupEventListeners() {
-    listSelect.addEventListener('change', onListSelected);
-    scanBtn.addEventListener('click', openScanner);
-    closeScannerBtn.addEventListener('click', closeScanner);
-    manualSubmitBtn.addEventListener('click', submitManualBarcode);
-    manualBarcode.addEventListener('keypress', (e) => { if (e.key === 'Enter') submitManualBarcode(); });
-    clearHistoryBtn.addEventListener('click', clearHistory);
-}
+        // ===== 事件監聽器設定 =====
+        function setupEventListeners() {
+            // 上傳區域事件
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            fileInput.addEventListener('change', handleFileSelect);
 
-function onListSelected() {
-    const index = parseInt(listSelect.value);
-    if (isNaN(index) || index < 0) {
-        selectedListIndex = -1;
-        listStats.classList.add('hidden');
-        scanBtn.disabled = true;
-        scanHint.textContent = '請先選擇清單後開始掃描';
-        return;
-    }
-    
-    selectedListIndex = index;
-    listStats.classList.remove('hidden');
-    scanBtn.disabled = false;
-    scanHint.textContent = '點擊按鈕開始掃描條碼';
-    updateStats();
-    showToast(`已選擇：${LISTS_DATA[index].name}`, 'success');
-}
+            // 清除檔案
+            clearFilesBtn.addEventListener('click', clearAllFiles);
 
-function updateStats() {
-    if (selectedListIndex < 0) return;
-    
-    const list = LISTS_DATA[selectedListIndex];
-    const total = list.barcodes.length;
-    let scanned = 0;
-    
-    list.barcodes.forEach(b => {
-        if (scannedBarcodes.has(`${selectedListIndex}:${b}`)) scanned++;
-    });
-    
-    totalCount.textContent = total;
-    scannedCount.textContent = scanned;
-    pendingCount.textContent = total - scanned;
-}
+            // 掃描按鈕
+            scanBtn.addEventListener('click', openScanner);
 
-function openScanner() {
-    if (selectedListIndex < 0) return;
-    
-    scannerSection.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    scannerResult.classList.remove('show');
-    
-    html5QrCode = new Html5Qrcode("reader");
-    
-    // 計算適合螢幕的掃描框大小
-    const screenWidth = window.innerWidth;
-    const qrboxWidth = Math.min(screenWidth - 40, 350);
-    const qrboxHeight = 150;
-    
-    html5QrCode.start(
-        { facingMode: "environment" },
-        { 
-            fps: 15,
-            qrbox: { width: qrboxWidth, height: qrboxHeight },
-            aspectRatio: 1.0,
-            formatsToSupport: [
-                Html5QrcodeSupportedFormats.CODE_39,
-                Html5QrcodeSupportedFormats.CODE_93,
-                Html5QrcodeSupportedFormats.CODE_128,
-                Html5QrcodeSupportedFormats.ITF,
-                Html5QrcodeSupportedFormats.EAN_13,
-                Html5QrcodeSupportedFormats.EAN_8,
-                Html5QrcodeSupportedFormats.CODABAR
-            ]
-        },
-        onScanSuccess,
-        () => {}
-    ).catch(err => {
-        console.error('相機錯誤:', err);
-        showToast('無法存取相機，請確認權限', 'error');
-    });
-}
+            // 關閉掃描器
+            closeScannerBtn.addEventListener('click', closeScanner);
 
-function closeScanner() {
-    if (html5QrCode) {
-        html5QrCode.stop().then(() => { html5QrCode.clear(); html5QrCode = null; }).catch(() => {});
-    }
-    scannerSection.classList.remove('active');
-    document.body.style.overflow = '';
-    manualBarcode.value = '';
-}
+            // 手動輸入
+            manualSubmitBtn.addEventListener('click', submitManualBarcode);
+            manualBarcode.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') submitManualBarcode();
+            });
 
-function onScanSuccess(decodedText) {
-    verifyBarcode(decodedText);
-    if (navigator.vibrate) navigator.vibrate(100);
-}
+            // 清除歷史
+            clearHistoryBtn.addEventListener('click', clearHistory);
 
-function submitManualBarcode() {
-    const barcode = manualBarcode.value.trim();
-    if (barcode) {
-        verifyBarcode(barcode);
-        manualBarcode.value = '';
-    }
-}
-
-function verifyBarcode(barcode) {
-    if (selectedListIndex < 0) return;
-    
-    const list = LISTS_DATA[selectedListIndex];
-    const key = `${selectedListIndex}:${barcode}`;
-    const isDuplicate = scannedBarcodes.has(key);
-    
-    const barcodeUpper = barcode.toUpperCase();
-    let found = false;
-    let record = null;
-    
-    for (const r of list.fullData) {
-        if (r.barcode.toUpperCase() === barcodeUpper) {
-            found = true;
-            record = r;
-            break;
+            // 匯出報告
+            exportBtn.addEventListener('click', exportReport);
         }
-    }
-    
-    let status, icon, message;
-    
-    if (isDuplicate) {
-        status = 'warning'; icon = '⚠️'; message = '此條碼已掃描過';
-    } else if (found) {
-        status = 'success'; icon = '✓'; message = '比對成功！此條碼在清單中';
-        scannedBarcodes.add(key);
-    } else {
-        status = 'error'; icon = '✗'; message = '比對失敗！此條碼不在清單中';
-    }
-    
-    showScannerResult(status, icon, barcode, message, record);
-    addToHistory(status, icon, barcode, message);
-    updateStats();
-    playSound(status);
-    saveToStorage();
-}
 
-function showScannerResult(status, icon, barcode, message, record) {
-    scannerResult.className = `scanner-result ${status} show`;
-    scannerResultIcon.textContent = icon;
-    scannerResultBarcode.textContent = barcode;
-    scannerResultMessage.textContent = message;
-    
-    if (record && status === 'success') {
-        scannerResultDetails.innerHTML = `<p><strong>客戶：</strong>${record.customer || '-'}</p><p><strong>產品：</strong>${record.product || '-'}</p>`;
-        scannerResultDetails.style.display = 'block';
-    } else {
-        scannerResultDetails.style.display = 'none';
-    }
-    
-    setTimeout(() => scannerResult.classList.remove('show'), 2500);
-}
+        // ===== 檔案處理 =====
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
 
-function addToHistory(status, icon, barcode, message) {
-    const now = new Date();
-    const time = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    scanHistory.unshift({ status, icon, barcode, message, time });
-    if (scanHistory.length > 50) scanHistory.pop();
-    renderHistory();
-}
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
 
-function renderHistory() {
-    if (scanHistory.length === 0) {
-        historyList.innerHTML = '<div class="empty-history"><p>尚無掃描記錄</p></div>';
-        return;
-    }
-    historyList.innerHTML = scanHistory.map(h => `
-        <div class="history-item ${h.status}">
-            <span class="history-icon">${h.icon}</span>
-            <div class="history-content">
-                <div class="history-barcode">${h.barcode}</div>
-                <div class="history-message">${h.message}</div>
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            processFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            processFiles(files);
+            fileInput.value = '';  // 清空以便重複選擇同檔案
+        }
+
+        async function processFiles(files) {
+            for (const file of files) {
+                if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                    showToast(`${file.name} 不是 Excel 檔案`, 'error');
+                    continue;
+                }
+
+                try {
+                    showToast(`正在讀取 ${file.name}...`, 'info');
+                    const data = await readExcelFile(file);
+
+                    // 檢查是否已存在
+                    const existingIndex = loadedFiles.findIndex(f => f.name === file.name);
+                    if (existingIndex >= 0) {
+                        loadedFiles[existingIndex] = data;
+                        showToast(`已更新 ${file.name}`, 'success');
+                    } else {
+                        loadedFiles.push(data);
+                        showToast(`已載入 ${file.name}，共 ${data.barcodes.length} 筆條碼`, 'success');
+                    }
+                } catch (error) {
+                    console.error('讀取檔案錯誤:', error);
+                    showToast(`讀取 ${file.name} 失敗`, 'error');
+                }
+            }
+
+            renderFileList();
+            saveToStorage();
+        }
+
+        async function readExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                        // 解析檔名
+                        const nameMatch = file.name.match(/^(\d+)_(.+)\.xlsx?$/i);
+                        const serial = nameMatch ? nameMatch[1] : '00';
+                        const itemName = nameMatch ? nameMatch[2] : file.name.replace(/\.xlsx?$/i, '');
+
+                        // 讀取條碼（從第 3 行開始，即 index 2）
+                        const barcodes = [];
+                        const fullData = [];
+
+                        for (let i = 2; i < jsonData.length; i++) {
+                            const row = jsonData[i];
+                            if (row && row[0]) {
+                                const barcode = String(row[0]).trim();
+                                if (barcode) {
+                                    barcodes.push(barcode);
+                                    fullData.push({
+                                        barcode: barcode,
+                                        customer: row[1] ? String(row[1]).trim() : '',
+                                        product: row[2] ? String(row[2]).trim() : '',
+                                        batch: row[3] ? String(row[3]).trim() : ''
+                                    });
+                                }
+                            }
+                        }
+
+                        resolve({
+                            name: file.name,
+                            serial: serial,
+                            itemName: itemName,
+                            barcodes: barcodes,
+                            fullData: fullData
+                        });
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function renderFileList() {
+            if (loadedFiles.length === 0) {
+                loadedFilesSection.classList.add('hidden');
+                statsSection.classList.add('hidden');
+                scanBtn.disabled = true;
+                scanHint.textContent = '請先上傳並選擇 Excel 清單';
+                return;
+            }
+
+            loadedFilesSection.classList.remove('hidden');
+
+            fileList.innerHTML = loadedFiles.map((file, index) => `
+        <div class="file-item ${index === selectedFileIndex ? 'active' : ''}">
+            <span class="file-icon">📄</span>
+            <div class="file-info">
+                <div class="file-name">${file.serial} - ${file.itemName}</div>
+                <div class="file-count">${file.barcodes.length} 筆條碼</div>
             </div>
-            <span class="history-time">${h.time}</span>
+            <button class="file-select-btn ${index === selectedFileIndex ? 'selected' : ''}" 
+                    onclick="selectFile(${index})">
+                ${index === selectedFileIndex ? '已選擇' : '選擇'}
+            </button>
         </div>
     `).join('');
-}
+        }
 
-function clearHistory() {
-    if (confirm('確定要清除所有掃描記錄嗎？')) {
-        scanHistory = [];
-        scannedBarcodes.clear();
-        renderHistory();
-        updateStats();
-        saveToStorage();
-        showToast('已清除掃描記錄', 'success');
-    }
-}
+        function selectFile(index) {
+            selectedFileIndex = index;
+            renderFileList();
+            updateStats();
 
-function saveToStorage() {
-    try {
-        localStorage.setItem('bc_scanned', JSON.stringify([...scannedBarcodes]));
-        localStorage.setItem('bc_history', JSON.stringify(scanHistory));
-    } catch (e) {}
-}
+            const file = loadedFiles[index];
+            selectedListName.textContent = `${file.serial} - ${file.itemName}`;
+            statsSection.classList.remove('hidden');
+            scanBtn.disabled = false;
+            scanHint.textContent = '點擊按鈕開始掃描條碼';
 
-function loadFromStorage() {
-    try {
-        const s = localStorage.getItem('bc_scanned');
-        if (s) scannedBarcodes = new Set(JSON.parse(s));
-        const h = localStorage.getItem('bc_history');
-        if (h) { scanHistory = JSON.parse(h); renderHistory(); }
-    } catch (e) {}
-}
+            showToast(`已選擇清單: ${file.itemName}`, 'success');
+            saveToStorage();
+        }
 
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    toastContainer.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
-}
+        function clearAllFiles() {
+            if (confirm('確定要清除所有已載入的清單嗎？')) {
+                loadedFiles = [];
+                selectedFileIndex = -1;
+                scannedBarcodes.clear();
+                renderFileList();
+                updateStats();
+                resultSection.classList.add('hidden');
+                saveToStorage();
+                showToast('已清除所有清單', 'success');
+            }
+        }
 
-function playSound(status) {
-    try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.frequency.value = status === 'success' ? 800 : status === 'error' ? 300 : 500;
-        osc.type = status === 'success' ? 'sine' : 'square';
-        gain.gain.value = 0.1;
-        osc.start();
-        setTimeout(() => { osc.stop(); ctx.close(); }, 150);
-    } catch (e) {}
-}
+        // ===== 掃描器控制 =====
+        function openScanner() {
+            if (selectedFileIndex < 0) {
+                showToast('請先選擇清單', 'error');
+                return;
+            }
+
+            scannerSection.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            scannerResult.classList.add('hidden');
+
+            // 重置掃描器內的即時記錄
+            scannerSessionHistory = [];
+            renderScannerHistory();
+
+            // 初始化條碼掃描器
+            html5QrCode = new Html5Qrcode("reader");
+
+            // 長方形掃描區域配置
+            const config = {
+                fps: 15,
+                qrbox: { width: 300, height: 80 },  // 明顯的長方形掃描框
+                aspectRatio: 1.777778,  // 16:9 比例
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.CODE_39,
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                    Html5QrcodeSupportedFormats.QR_CODE
+                ]
+            };
+
+            html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => {
+                console.error('無法啟動相機:', err);
+                showToast('無法存取相機，請確認權限設定', 'error');
+            });
+        }
+
+        function closeScanner() {
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    html5QrCode = null;
+                }).catch(err => {
+                    console.error('停止掃描器錯誤:', err);
+                });
+            }
+
+            scannerSection.classList.add('hidden');
+            document.body.style.overflow = '';
+            manualBarcode.value = '';
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log('掃描成功:', decodedText);
+            verifyBarcode(decodedText);
+
+            // 震動提示
+            if (navigator.vibrate) {
+                navigator.vibrate(100);
+            }
+        }
+
+        function onScanFailure(error) {
+            // 忽略掃描失敗
+        }
+
+        function submitManualBarcode() {
+            const barcode = manualBarcode.value.trim();
+            if (barcode) {
+                verifyBarcode(barcode);
+                manualBarcode.value = '';
+            }
+        }
+
+        // ===== 條碼驗證 =====
+        function verifyBarcode(barcode) {
+            if (selectedFileIndex < 0) {
+                showToast('請先選擇清單', 'error');
+                return;
+            }
+
+            const file = loadedFiles[selectedFileIndex];
+            const barcodeKey = `${file.name}:${barcode}`;
+            const isDuplicate = scannedBarcodes.has(barcodeKey);
+
+            // 查找條碼
+            const barcodeUpper = barcode.toUpperCase();
+            let found = false;
+            let matchedRecord = null;
+
+            for (const record of file.fullData) {
+                if (record.barcode.toUpperCase() === barcodeUpper) {
+                    found = true;
+                    matchedRecord = record;
+                    break;
+                }
+            }
+
+            let status, icon, message;
+
+            if (isDuplicate) {
+                status = 'warning';
+                icon = '⚠️';
+                message = '此條碼已掃描過';
+            } else if (found) {
+                status = 'success';
+                icon = '✓';
+                message = '比對成功！此條碼在清單中';
+                scannedBarcodes.add(barcodeKey);
+            } else {
+                status = 'error';
+                icon = '✗';
+                message = '比對失敗！此條碼不在清單中';
+            }
+
+            // 顯示掃描器內的結果
+            showScannerResult(status, icon, barcode, message);
+
+            // 添加到掃描器內的即時記錄
+            addToScannerHistory(status, icon, barcode, message);
+
+            // 顯示主頁結果
+            showResult(status, icon, barcode, message, matchedRecord);
+
+            // 添加到歷史
+            addToHistory(status, icon, barcode, message);
+
+            // 更新統計
+            updateStats();
+
+            // 播放音效
+            playSound(status);
+
+            // 儲存
+            saveToStorage();
+        }
+
+        function showScannerResult(status, icon, barcode, message) {
+            scannerResult.classList.remove('hidden');
+            scannerResult.className = `scanner-result result-card ${status}`;
+            scannerResultIcon.textContent = icon;
+            scannerResultBarcode.textContent = barcode;
+            scannerResultMessage.textContent = message;
+
+            // 3 秒後隱藏
+            setTimeout(() => {
+                scannerResult.classList.add('hidden');
+            }, 2000);
+        }
+
+        function showResult(status, icon, barcode, message, record) {
+            resultCard.className = `result-card ${status}`;
+            resultIcon.textContent = icon;
+            resultBarcode.textContent = barcode;
+            resultMessage.textContent = message;
+
+            if (record && status === 'success') {
+                resultDetails.innerHTML = `
+            <p><strong>客戶：</strong>${record.customer || '-'}</p>
+            <p><strong>產品：</strong>${record.product || '-'}</p>
+            <p><strong>批號：</strong>${record.batch || '-'}</p>
+        `;
+                resultDetails.style.display = 'block';
+            } else {
+                resultDetails.style.display = 'none';
+            }
+
+            resultSection.classList.remove('hidden');
+        }
+
+        // ===== 掃描器內即時記錄 =====
+        function addToScannerHistory(status, icon, barcode, message) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-TW', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            scannerSessionHistory.unshift({
+                status,
+                icon,
+                barcode,
+                message,
+                time: timeStr
+            });
+
+            // 限制掃描器內記錄數量（最多顯示 20 筆）
+            if (scannerSessionHistory.length > 20) {
+                scannerSessionHistory.pop();
+            }
+
+            renderScannerHistory();
+        }
+
+        function renderScannerHistory() {
+            // 更新計數
+            scannerHistoryCount.textContent = scannerSessionHistory.length;
+
+            if (scannerSessionHistory.length === 0) {
+                scannerHistoryList.innerHTML = '<div class="scanner-history-empty">開始掃描條碼...</div>';
+                return;
+            }
+
+            scannerHistoryList.innerHTML = scannerSessionHistory.map((item, index) => `
+                <div class="scanner-history-item ${item.status}" ${index === 0 ? 'style="animation: slideInHistory 0.3s ease"' : ''}>
+                    <span class="scanner-history-icon">${item.icon}</span>
+                    <div class="scanner-history-content">
+                        <div class="scanner-history-barcode">${item.barcode}</div>
+                        <div class="scanner-history-message">${item.message}</div>
+                    </div>
+                    <span class="scanner-history-time">${item.time}</span>
+                </div>
+            `).join('');
+        }
+
+        // ===== 歷史記錄 =====
+        function addToHistory(status, icon, barcode, message) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-TW', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            scanHistory.unshift({
+                status,
+                icon,
+                barcode,
+                message,
+                time: timeStr,
+                listName: loadedFiles[selectedFileIndex]?.itemName || ''
+            });
+
+            // 限制數量
+            if (scanHistory.length > 100) {
+                scanHistory.pop();
+            }
+
+            renderHistory();
+        }
+
+        function renderHistory() {
+            if (scanHistory.length === 0) {
+                historyList.innerHTML = '<div class="empty-history"><p>尚無掃描記錄</p></div>';
+                return;
+            }
+
+            historyList.innerHTML = scanHistory.map(item => `
+        <div class="history-item ${item.status}">
+            <span class="history-icon">${item.icon}</span>
+            <div class="history-content">
+                <div class="history-barcode">${item.barcode}</div>
+                <div class="history-message">${item.message}</div>
+            </div>
+            <span class="history-time">${item.time}</span>
+        </div>
+    `).join('');
+        }
+
+        function clearHistory() {
+            if (confirm('確定要清除所有掃描記錄嗎？')) {
+                scanHistory = [];
+                scannedBarcodes.clear();
+                renderHistory();
+                updateStats();
+                resultSection.classList.add('hidden');
+                saveToStorage();
+                showToast('已清除掃描記錄', 'success');
+            }
+        }
+
+        // ===== 統計更新 =====
+        function updateStats() {
+            if (selectedFileIndex < 0 || !loadedFiles[selectedFileIndex]) {
+                totalCount.textContent = '0';
+                scannedCount.textContent = '0';
+                pendingCount.textContent = '0';
+                return;
+            }
+
+            const file = loadedFiles[selectedFileIndex];
+            const total = file.barcodes.length;
+            let scanned = 0;
+
+            file.barcodes.forEach(barcode => {
+                const key = `${file.name}:${barcode}`;
+                if (scannedBarcodes.has(key)) {
+                    scanned++;
+                }
+            });
+
+            totalCount.textContent = total;
+            scannedCount.textContent = scanned;
+            pendingCount.textContent = total - scanned;
+        }
+
+        // ===== 本地儲存 =====
+        function saveToStorage() {
+            try {
+                localStorage.setItem('barcodeChecker_scanned', JSON.stringify(Array.from(scannedBarcodes)));
+                localStorage.setItem('barcodeChecker_history', JSON.stringify(scanHistory));
+                localStorage.setItem('barcodeChecker_selectedIndex', selectedFileIndex.toString());
+            } catch (e) {
+                console.error('儲存失敗:', e);
+            }
+        }
+
+        function loadFromStorage() {
+            try {
+                const scanned = localStorage.getItem('barcodeChecker_scanned');
+                if (scanned) {
+                    scannedBarcodes = new Set(JSON.parse(scanned));
+                }
+
+                const history = localStorage.getItem('barcodeChecker_history');
+                if (history) {
+                    scanHistory = JSON.parse(history);
+                    renderHistory();
+                }
+
+                const index = localStorage.getItem('barcodeChecker_selectedIndex');
+                if (index !== null) {
+                    selectedFileIndex = parseInt(index, 10);
+                }
+            } catch (e) {
+                console.error('載入儲存資料失敗:', e);
+            }
+        }
+
+        // ===== 匯出報告 =====
+        function exportReport() {
+            if (scanHistory.length === 0) {
+                showToast('沒有掃描記錄可匯出', 'error');
+                return;
+            }
+
+            let report = '條碼比對報告\n';
+            report += '==================\n';
+            report += `匯出時間: ${new Date().toLocaleString('zh-TW')}\n\n`;
+
+            if (selectedFileIndex >= 0) {
+                const file = loadedFiles[selectedFileIndex];
+                report += `清單: ${file.serial} - ${file.itemName}\n`;
+                report += `總筆數: ${file.barcodes.length}\n`;
+
+                let scanned = 0;
+                file.barcodes.forEach(barcode => {
+                    if (scannedBarcodes.has(`${file.name}:${barcode}`)) {
+                        scanned++;
+                    }
+                });
+                report += `已掃描: ${scanned}\n`;
+                report += `未掃描: ${file.barcodes.length - scanned}\n\n`;
+            }
+
+            report += '掃描記錄\n';
+            report += '--------\n';
+
+            scanHistory.forEach(item => {
+                const status = item.status === 'success' ? '✓' : (item.status === 'error' ? '✗' : '⚠');
+                report += `${item.time} [${status}] ${item.barcode} - ${item.message}\n`;
+            });
+
+            // 下載檔案
+            const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `條碼比對報告_${new Date().toISOString().slice(0, 10)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showToast('報告已匯出', 'success');
+        }
+
+        // ===== Toast 通知 =====
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // ===== 音效提示 =====
+        function playSound(status) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                if (status === 'success') {
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'sine';
+                } else if (status === 'error') {
+                    oscillator.frequency.value = 300;
+                    oscillator.type = 'square';
+                } else {
+                    oscillator.frequency.value = 500;
+                    oscillator.type = 'triangle';
+                }
+
+                gainNode.gain.value = 0.1;
+                oscillator.start();
+
+                setTimeout(() => {
+                    oscillator.stop();
+                    audioContext.close();
+                }, 150);
+            } catch (e) {
+                // 忽略音效錯誤
+            }
+        }
     </script>
 </body>
+
 </html>
