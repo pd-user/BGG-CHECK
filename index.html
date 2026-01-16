@@ -1884,14 +1884,32 @@ function openScanner() {
     
     html5QrCode = new Html5Qrcode("reader");
     
+    // 計算適合螢幕的掃描框大小
+    const screenWidth = window.innerWidth;
+    const qrboxWidth = Math.min(screenWidth - 40, 350);
+    const qrboxHeight = 150;
+    
     html5QrCode.start(
         { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 280, height: 100 }, formatsToSupport: [Html5QrcodeSupportedFormats.CODE_39, Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.QR_CODE] },
+        { 
+            fps: 15,
+            qrbox: { width: qrboxWidth, height: qrboxHeight },
+            aspectRatio: 1.0,
+            formatsToSupport: [
+                Html5QrcodeSupportedFormats.CODE_39,
+                Html5QrcodeSupportedFormats.CODE_93,
+                Html5QrcodeSupportedFormats.CODE_128,
+                Html5QrcodeSupportedFormats.ITF,
+                Html5QrcodeSupportedFormats.EAN_13,
+                Html5QrcodeSupportedFormats.EAN_8,
+                Html5QrcodeSupportedFormats.CODABAR
+            ]
+        },
         onScanSuccess,
         () => {}
     ).catch(err => {
         console.error('相機錯誤:', err);
-        showToast('無法存取相機', 'error');
+        showToast('無法存取相機，請確認權限', 'error');
     });
 }
 
