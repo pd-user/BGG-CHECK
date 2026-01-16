@@ -309,8 +309,8 @@
       background: #000;
       border-radius: var(--radius-lg);
       overflow: hidden;
-      height: 250px;
-      min-height: 250px;
+      height: 320px;
+      min-height: 320px;
       flex-shrink: 0;
     }
 
@@ -2470,7 +2470,8 @@
       let scanned = 0;
 
       list.barcodes.forEach(b => {
-        if (scannedBarcodes.has(`${selectedListIndex}:${b}`)) scanned++;
+        // 統一使用大寫條碼進行比對
+        if (scannedBarcodes.has(`${selectedListIndex}:${b.toUpperCase()}`)) scanned++;
       });
 
       totalCount.textContent = total;
@@ -2491,17 +2492,17 @@
 
       html5QrCode = new Html5Qrcode("reader");
 
-      // 長方形掃描框配置 - 更適合條碼掃描
+      // 長方形掃描框配置 - 增大掃描區域以便對準條碼
       const screenWidth = window.innerWidth;
-      const qrboxWidth = Math.min(screenWidth - 40, 320);
-      const qrboxHeight = 70;  // 更扁的長方形，適合條碼
+      const qrboxWidth = Math.min(screenWidth - 60, 280);
+      const qrboxHeight = 100;  // 較大的長方形掃描區域
 
       html5QrCode.start(
         { facingMode: "environment" },
         {
-          fps: 15,
+          fps: 10,
           qrbox: { width: qrboxWidth, height: qrboxHeight },
-          aspectRatio: 1.777778,  // 16:9 比例
+          // 不設 aspectRatio，讓相機自動選擇最佳比例
           formatsToSupport: [
             Html5QrcodeSupportedFormats.CODE_39,
             Html5QrcodeSupportedFormats.CODE_93,
@@ -2546,10 +2547,10 @@
       if (selectedListIndex < 0) return;
 
       const list = LISTS_DATA[selectedListIndex];
-      const key = `${selectedListIndex}:${barcode}`;
+      const barcodeUpper = barcode.toUpperCase();
+      const key = `${selectedListIndex}:${barcodeUpper}`;  // 統一使用大寫作為 key
       const isDuplicate = scannedBarcodes.has(key);
 
-      const barcodeUpper = barcode.toUpperCase();
       let found = false;
       let record = null;
 
@@ -2567,7 +2568,7 @@
         status = 'warning'; icon = '⚠️'; message = '此條碼已掃描過';
       } else if (found) {
         status = 'success'; icon = '✓'; message = '比對成功！此條碼在清單中';
-        scannedBarcodes.add(key);
+        scannedBarcodes.add(key);  // 使用大寫 key 記錄
       } else {
         status = 'error'; icon = '✗'; message = '比對失敗！此條碼不在清單中';
       }
