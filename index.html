@@ -306,12 +306,11 @@
     }
 
     .scanner-reader {
+      flex: 1;
       background: #000;
       border-radius: var(--radius-lg);
       overflow: hidden;
-      height: 320px;
-      min-height: 320px;
-      flex-shrink: 0;
+      max-height: 50vh;
     }
 
     .scanner-result {
@@ -2463,15 +2462,19 @@
     }
 
     function updateStats() {
-      if (selectedListIndex < 0) return;
+      if (selectedListIndex < 0) {
+        return;
+      }
 
       const list = LISTS_DATA[selectedListIndex];
       const total = list.barcodes.length;
       let scanned = 0;
 
       list.barcodes.forEach(b => {
-        // 統一使用大寫條碼進行比對
-        if (scannedBarcodes.has(`${selectedListIndex}:${b.toUpperCase()}`)) scanned++;
+        const key = `${selectedListIndex}:${b.toUpperCase()}`;
+        if (scannedBarcodes.has(key)) {
+          scanned++;
+        }
       });
 
       totalCount.textContent = total;
@@ -2492,17 +2495,17 @@
 
       html5QrCode = new Html5Qrcode("reader");
 
-      // 長方形掃描框配置 - 增大掃描區域以便對準條碼
+      // 原始掃描框配置
       const screenWidth = window.innerWidth;
-      const qrboxWidth = Math.min(screenWidth - 60, 280);
-      const qrboxHeight = 100;  // 較大的長方形掃描區域
+      const qrboxWidth = Math.min(screenWidth - 40, 350);
+      const qrboxHeight = 150;
 
       html5QrCode.start(
         { facingMode: "environment" },
         {
-          fps: 10,
+          fps: 15,
           qrbox: { width: qrboxWidth, height: qrboxHeight },
-          // 不設 aspectRatio，讓相機自動選擇最佳比例
+          aspectRatio: 1.0,
           formatsToSupport: [
             Html5QrcodeSupportedFormats.CODE_39,
             Html5QrcodeSupportedFormats.CODE_93,
@@ -2528,6 +2531,9 @@
       scannerSection.classList.remove('active');
       document.body.style.overflow = '';
       manualBarcode.value = '';
+      // 關閉掃描器時重新更新主介面統計
+      updateStats();
+      renderHistory();
     }
 
     function onScanSuccess(decodedText) {
